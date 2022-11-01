@@ -410,6 +410,7 @@ def clear_prompt(prompt, _prompt_neg, confirmed, _token_counter):
 
 def connect_clear_prompt(button, prompt, prompt_neg, _dummy_confirmed, token_counter):
     """Given clear button, prompt, and token_counter objects, setup clear prompt button click event"""
+
     button.click(
         _js="clear_prompt",
         fn=clear_prompt,
