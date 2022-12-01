@@ -268,6 +268,12 @@ def load_model(checkpoint_info=None):
     sd_hijack.model_hijack.hijack(sd_model)
 
     sd_model.eval()
+
+    try:
+        sd_model = kernl_optimize(sd_model)
+    except EnvironmentError as e:
+        print("Your device is not elligible for kernl.ai model optimization")
+
     shared.sd_model = sd_model
 
     script_callbacks.model_loaded_callback(sd_model)
@@ -275,17 +281,29 @@ def load_model(checkpoint_info=None):
     print(f"Model loaded.")
     return sd_model
 
+def kernl_optimize(model):
+    """Given a model, the kernl optimized model is returned. Otherwise, an exception is thrown"""
+    # check if device supports kernl.ai/has ccv 8.0 or up
+    from torch.cuda import get_device_capability
+    # compute capability version
+    ccv = get_device_capability()
+
+    print(f"Device compute capability version: '{ccv[0]}.{ccv[1]}'")
+
+    if ccv[0] >= 8:
+        from kernl.model_optimization import optimize_model
+        print("Optimizing model with kernl.ai")
+        return optimize_model(shared.sd_model)
+    else:
+        raise EnvironmentError("Device compute capability is not 8.0 or higher")
+
 
 def reload_model_weights(sd_model=None, info=None):
     from modules import lowvram, devices, sd_hijack
     checkpoint_info = info or select_checkpoint()
  
     if not sd_model:
-        # optimize model using kernl
-        from kernl.model_optimization import optimize_model
-        print("optimizing model with kernl")
-        sd_model = optimize_model(shared.sd_model)
-
+        sd_model = shared.sd_model
 
     if sd_model.sd_model_checkpoint == checkpoint_info.filename:
         return
