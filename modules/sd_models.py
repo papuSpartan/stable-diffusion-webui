@@ -281,7 +281,11 @@ def reload_model_weights(sd_model=None, info=None):
     checkpoint_info = info or select_checkpoint()
  
     if not sd_model:
-        sd_model = shared.sd_model
+        # optimize model using kernl
+        from kernl.model_optimization import optimize_model
+        print("optimizing model with kernl")
+        sd_model = optimize_model(shared.sd_model)
+
 
     if sd_model.sd_model_checkpoint == checkpoint_info.filename:
         return
